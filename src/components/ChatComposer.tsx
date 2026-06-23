@@ -175,12 +175,8 @@ export default function ChatComposer({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-[28px] border border-white/10 bg-slate-950/80 p-4 shadow-[0_24px_60px_rgba(3,15,30,0.35)] backdrop-blur-xl"
+      className="flex flex-col w-full"
     >
-      <label className="mb-3 block text-xs uppercase tracking-[0.3em] text-slate-400">
-        Tulis pesan
-      </label>
-
       {warning && (
         <div className="mb-3 flex items-center gap-2 rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-3 text-xs text-amber-100">
           <AlertTriangle className="h-4 w-4 shrink-0 text-amber-300" />
@@ -193,7 +189,7 @@ export default function ChatComposer({
           {attachments.map((file, index) => (
             <div
               key={index}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-900/80 px-3 py-2 text-xs text-slate-200"
             >
               {file.dataUrl ? (
                 <img
@@ -227,13 +223,13 @@ export default function ChatComposer({
             void submitCurrentMessage();
           }
         }}
-        rows={4}
-        placeholder="Ketik pesan, upload file, atau minta bikin gambar..."
-        className="min-h-28 w-full resize-none rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4 text-sm leading-7 text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40 focus:bg-white/[0.05]"
+        rows={3}
+        placeholder="Ketik pesan, unggah berkas, atau ketik 'buat gambar...' untuk AI generator"
+        className="min-h-24 w-full resize-none rounded-2xl border border-white/10 bg-slate-950/45 px-4 py-3 text-sm leading-relaxed text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40 focus:bg-slate-950/65 focus:shadow-[0_0_20px_rgba(34,211,238,0.05)]"
       />
 
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -245,9 +241,9 @@ export default function ChatComposer({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs text-slate-300 transition hover:border-cyan-300/30 hover:bg-white/5"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/[0.02] px-3.5 py-1.5 text-[11px] text-slate-300 transition hover:border-cyan-300/30 hover:bg-white/5"
           >
-            <Paperclip className="h-4 w-4" />
+            <Paperclip className="h-3.5 w-3.5 text-slate-400" />
             Upload File
           </button>
 
@@ -262,40 +258,40 @@ export default function ChatComposer({
           <button
             type="button"
             onClick={() => imageInputRef.current?.click()}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs text-slate-300 transition hover:border-cyan-300/30 hover:bg-white/5"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/[0.02] px-3.5 py-1.5 text-[11px] text-slate-300 transition hover:border-cyan-300/30 hover:bg-white/5"
           >
-            <FileImage className="h-4 w-4" />
+            <FileImage className="h-3.5 w-3.5 text-slate-400" />
             Upload Foto
           </button>
 
-          <p className="text-xs text-slate-500">
-            Maks {MAX_FILES} file, {MAX_FILE_SIZE / 1024 / 1024}MB per file
+          <p className="text-[10px] text-slate-500 ml-1">
+            Maks {MAX_FILES} file (5MB/file)
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button
             type="button"
             onClick={onReset}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 px-4 py-3 text-sm text-slate-200 transition hover:border-cyan-300/30 hover:bg-white/5"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/[0.01] px-4 py-2 text-xs font-medium text-slate-200 transition hover:border-cyan-300/30 hover:bg-white/5"
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-3.5 w-3.5" />
             Reset
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:bg-cyan-300/70"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-300 px-5 py-2 text-xs font-semibold text-slate-950 transition hover:opacity-95 disabled:cursor-not-allowed disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500"
           >
             {isLoading ? (
               <>
-                <LoaderCircle className="h-4 w-4 animate-spin" />
+                <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
                 Mengirim...
               </>
             ) : (
               <>
-                <SendHorizonal className="h-4 w-4" />
-                Kirim pesan
+                <SendHorizonal className="h-3.5 w-3.5" />
+                Kirim
               </>
             )}
           </button>
