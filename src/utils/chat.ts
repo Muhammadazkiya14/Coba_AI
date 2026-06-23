@@ -20,7 +20,6 @@ export interface Agent {
   name: string;
   icon: string;
   description: string;
-  model: string;
   systemPrompt: string;
   supportsImage: boolean;
 }
@@ -31,7 +30,6 @@ export const agents: Agent[] = [
     name: "Chat Assistant",
     icon: "MessageSquare",
     description: "Asisten chat umum untuk percakapan santai",
-    model: "meta-llama/llama-3.1-8b-instruct",
     systemPrompt: "Kamu adalah pesut.ai, personal assistant yang ramah, jelas, dan proaktif. Jawab dalam bahasa Indonesia yang natural, ringkas saat perlu, dan tetap membantu.",
     supportsImage: false,
   },
@@ -40,7 +38,6 @@ export const agents: Agent[] = [
     name: "Coding Assistant",
     icon: "Code",
     description: "Expert programmer untuk bantuan koding",
-    model: "google/gemini-2.0-flash-exp:free",
     systemPrompt: "Kamu adalah expert programmer yang ahli dalam banyak bahasa pemrograman. Berikan kode yang bersih, efisien, dan well-documented. Gunakan bahasa Indonesia untuk penjelasan, tapi kode tetap dalam bahasa Inggris. Selalu sertakan contoh penggunaan jika memungkinkan.",
     supportsImage: false,
   },
@@ -49,7 +46,6 @@ export const agents: Agent[] = [
     name: "Document Analyst",
     icon: "FileText",
     description: "Analisis dan ekstrak info dari dokumen teks atau gambar",
-    model: "google/gemini-2.0-flash-exp:free",
     systemPrompt: "Kamu adalah analyst dokumen profesional. Baca, ringkas, ekstrak informasi penting, dan berikan insight dari dokumen yang diberikan. Jawab dalam bahasa Indonesia yang jelas dan terstruktur.",
     supportsImage: true,
   },
@@ -58,7 +54,6 @@ export const agents: Agent[] = [
     name: "Image Analyst",
     icon: "Image",
     description: "Analisis dan deskripsi gambar",
-    model: "google/gemini-2.0-flash-exp:free",
     systemPrompt: "Kamu adalah vision AI yang bisa menganalisis gambar. Jelaskan apa yang ada di gambar, identifikasi objek, teks, dan konteks. Jawab dalam bahasa Indonesia yang detail dan akurat.",
     supportsImage: true,
   },
@@ -141,23 +136,6 @@ export function detectAgent(
   if (hasImages && hasFiles) {
     const docAgent = agents.find((a) => a.id === "document");
     if (docAgent) return docAgent;
-  }
-
-  const lowerContent = content.toLowerCase();
-
-  const codingKeywords = [
-    "kode", "code", "coding", "program", "javascript", "python", "java",
-    "typescript", "react", "vue", "angular", "node.js", "api", "database",
-    "sql", "mongo", "git", "github", "function", "class", "method",
-    "algorithm", "debug", "error", "bug", "software", "aplikasi",
-    "bikin kode", "buat kode", "tulis kode", "programming", "developer",
-  ];
-
-  const isCoding = codingKeywords.some((keyword) => lowerContent.includes(keyword));
-
-  if (isCoding) {
-    const codingAgent = agents.find((a) => a.id === "coding");
-    if (codingAgent) return codingAgent;
   }
 
   const chatAgent = agents.find((a) => a.id === "chat");

@@ -20,9 +20,11 @@ interface ChatStore {
   isLoading: boolean;
   error: string;
   selectedAgent: Agent;
+  selectedModel: string;
   models: Array<{ id: string; name: string; contextLength: number }>;
   modelsLoaded: boolean;
   setSelectedAgent: (agent: Agent) => void;
+  setSelectedModel: (model: string) => void;
   loadModels: () => Promise<void>;
   sendMessage: (content: string, attachments?: FileAttachment[]) => Promise<void>;
   clearChat: () => void;
@@ -37,13 +39,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     name: "Chat Assistant",
     icon: "MessageSquare",
     description: "Asisten chat umum untuk percakapan santai",
-    model: "meta-llama/llama-3.1-8b-instruct",
     systemPrompt: "Kamu adalah pesut.ai, personal assistant yang ramah, jelas, dan proaktif. Jawab dalam bahasa Indonesia yang natural, ringkas saat perlu, dan tetap membantu.",
     supportsImage: false,
   },
+  selectedModel: "",
   models: [],
   modelsLoaded: false,
   setSelectedAgent: (agent) => set({ selectedAgent: agent }),
+  setSelectedModel: (model) => set({ selectedModel: model }),
   loadModels: async () => {
     try {
       const response = await fetch("/api/models");
@@ -59,6 +62,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       set({
         models: data.models,
         modelsLoaded: true,
+        selectedModel: data.models[0]?.id ?? "",
       });
     } catch (error) {
       set({
@@ -112,7 +116,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         },
         body: JSON.stringify({
           messages: buildRequestMessages(nextMessages, detectedAgent.systemPrompt),
-          model: detectedAgent.model,
+          model: get().selectedModel,
         }),
       });
 

@@ -15,7 +15,7 @@ const agentIcons: Record<string, React.ElementType> = {
 };
 
 export default function Home() {
-  const { messages, isLoading, selectedAgent, modelsLoaded, setSelectedAgent, loadModels, sendMessage, clearChat } = useChatStore();
+  const { messages, isLoading, selectedAgent, selectedModel, models, modelsLoaded, setSelectedAgent, setSelectedModel, loadModels, sendMessage, clearChat } = useChatStore();
 
   useEffect(() => {
     if (!modelsLoaded) {
@@ -42,7 +42,7 @@ export default function Home() {
                 </h2>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-4 py-2">
                   <AgentIcon className="h-4 w-4 text-cyan-300" />
                   <select
@@ -60,6 +60,21 @@ export default function Home() {
                     ))}
                   </select>
                 </div>
+
+                {modelsLoaded && models.length > 0 ? (
+                  <select
+                    value={selectedModel}
+                    onChange={(event) => setSelectedModel(event.target.value)}
+                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition focus:border-cyan-300/40 focus:bg-white/[0.07]"
+                  >
+                    {models.map((model) => (
+                      <option key={model.id} value={model.id} className="bg-slate-900 text-white">
+                        {model.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+
                 {isLoading && (
                   <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-100">
                     <LoaderCircle className="h-4 w-4 animate-spin" />
