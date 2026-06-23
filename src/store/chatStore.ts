@@ -118,52 +118,58 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const trimmed = prompt.trim();
     if (!trimmed) return;
 
-    const imageModel = get().selectedImageModel;
-    if (!imageModel) {
-      set({
-        isLoading: false,
-        error: "Tidak ada model gambar yang dipilih. Tunggu model gambar dimuat atau refresh halaman.",
-      });
-      return;
-    }
+    const imageModel = get().selectedImageModel || "black-forest-labs/flux-schnell:free";
+    const modelsToTry = [imageModel];
 
     set({ isLoading: true, error: "" });
 
-    try {
-      const response = await fetch("/api/generate-image", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: trimmed,
-          model: imageModel,
-        }),
-      });
+    let lastError: { status?: number; message?: string } = {};
 
-      const data = (await response.json()) as { imageUrl?: string; error?: string; modelUsed?: string };
+    for (const tryModel of modelsToTry) {
+      try {
+        const response = await fetch("/api/generate-image", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prompt: trimmed,
+            model: tryModel,
+          }),
+        });
 
-      if (!response.ok || !data.imageUrl) {
-        throw new Error(data.error ?? "Gagal generate gambar.");
+        const data = (await response.json()) as { imageUrl?: string; error?: string; modelUsed?: string };
+
+        if (!response.ok || !data.imageUrl) {
+          lastError = {
+            status: response.status,
+            message: data.error ?? `Gagal generate gambar dengan model ${tryModel}.`,
+          };
+          continue;
+        }
+
+        set((state) => ({
+          messages: [
+            ...state.messages,
+            createMessage("assistant", `Gambar berhasil dibuat (${data.modelUsed ?? tryModel}):\n${trimmed}`, [data.imageUrl]),
+          ],
+          isLoading: false,
+          error: "",
+        }));
+        return;
+      } catch (error) {
+        lastError = {
+          status: 500,
+          message: error instanceof Error ? error.message : "Terjadi error saat memproses generate gambar.",
+        };
+        continue;
       }
-
-      set((state) => ({
-        messages: [
-          ...state.messages,
-          createMessage("assistant", `Gambar berhasil dibuat (${data.modelUsed ?? imageModel}):\n${trimmed}`, [data.imageUrl]),
-        ],
-        isLoading: false,
-        error: "",
-      }));
-    } catch (error) {
-      set({
-        isLoading: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Terjadi gangguan saat generate gambar.",
-      });
     }
+
+    set({
+      isLoading: false,
+      error: lastError.message ?? "Semua model gambar gagal. Coba lagi nanti.",
+    });
   },
   sendMessage: async (content: string, attachments?: FileAttachment[]) => {
     const trimmed = content.trim();

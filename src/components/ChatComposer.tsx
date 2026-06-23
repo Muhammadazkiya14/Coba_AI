@@ -3,8 +3,6 @@ import { AlertTriangle, FileImage, LoaderCircle, Paperclip, RotateCcw, SendHoriz
 import mammoth from "mammoth";
 import * as pdfjsLib from "pdfjs-dist";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-
 interface FileAttachment {
   name: string;
   type: string;
@@ -17,7 +15,6 @@ interface ChatComposerProps {
   isLoading: boolean;
   onSend: (content: string, attachments?: FileAttachment[]) => Promise<void>;
   onReset: () => void;
-  selectedAgentId?: string;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -27,7 +24,6 @@ export default function ChatComposer({
   isLoading,
   onSend,
   onReset,
-  selectedAgentId,
 }: ChatComposerProps) {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
@@ -232,11 +228,7 @@ export default function ChatComposer({
           }
         }}
         rows={4}
-        placeholder={
-          selectedAgentId === "image-gen"
-            ? "Deskripsi gambar yang ingin dibuat (3D, ilustrasi, dll)..."
-            : "Halo pesut.ai, upload file atau foto, atau minta bantu bikin kode..."
-        }
+        placeholder="Ketik pesan, upload file, atau minta bikin gambar..."
         className="min-h-28 w-full resize-none rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4 text-sm leading-7 text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/40 focus:bg-white/[0.05]"
       />
 

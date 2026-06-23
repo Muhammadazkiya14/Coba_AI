@@ -4,31 +4,12 @@ import ChatComposer from "@/components/ChatComposer";
 import ChatHeader from "@/components/ChatHeader";
 import MessageBubble from "@/components/MessageBubble";
 import { useChatStore } from "@/store/chatStore";
-import { agents, starterPrompts } from "@/utils/chat";
-import { Bot, Code, FileText, Image, MessageSquare, Sparkles } from "lucide-react";
-
-const agentIcons: Record<string, React.ElementType> = {
-  MessageSquare,
-  Code,
-  FileText,
-  Image,
-  ImageIcon: Sparkles,
-};
+import { starterPrompts } from "@/utils/chat";
 
 export default function Home() {
   const {
     messages,
     isLoading,
-    selectedAgent,
-    selectedModel,
-    selectedImageModel,
-    models,
-    modelsLoaded,
-    imageModels,
-    imageModelsLoaded,
-    setSelectedAgent,
-    setSelectedModel,
-    setSelectedImageModel,
     loadModels,
     loadImageModels,
     sendMessage,
@@ -36,18 +17,9 @@ export default function Home() {
   } = useChatStore();
 
   useEffect(() => {
-    if (!modelsLoaded) {
-      void loadModels();
-    }
-  }, [modelsLoaded, loadModels]);
-
-  useEffect(() => {
-    if (selectedAgent.id === "image-gen" && !imageModelsLoaded) {
-      void loadImageModels();
-    }
-  }, [selectedAgent.id, imageModelsLoaded, loadImageModels]);
-
-  const AgentIcon = agentIcons[selectedAgent.icon] ?? Bot;
+    void loadModels();
+    void loadImageModels();
+  }, [loadModels, loadImageModels]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.16),transparent_30%),linear-gradient(180deg,#03111d_0%,#071a2e_40%,#0b2034_100%)] px-4 py-8 text-white sm:px-6 lg:px-8">
@@ -56,7 +28,7 @@ export default function Home() {
 
         <section className="grid gap-6 lg:grid-cols-1">
           <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-4 shadow-[0_24px_70px_rgba(3,15,30,0.35)] backdrop-blur-xl sm:p-6">
-            <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-5 flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-cyan-200">
                   Ruang Percakapan
@@ -66,63 +38,12 @@ export default function Home() {
                 </h2>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-4 py-2">
-                  <AgentIcon className="h-4 w-4 text-cyan-300" />
-                  <select
-                    value={selectedAgent.id}
-                    onChange={(event) => {
-                      const agent = agents.find((a) => a.id === event.target.value);
-                      if (agent) setSelectedAgent(agent);
-                    }}
-                    className="bg-transparent text-sm text-cyan-100 outline-none"
-                  >
-                    {agents.map((agent) => (
-                      <option key={agent.id} value={agent.id} className="bg-slate-900 text-white">
-                        {agent.name}
-                      </option>
-                    ))}
-                  </select>
+              {isLoading && (
+                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-100">
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Menjawab
                 </div>
-
-                {selectedAgent.id === "image-gen" && imageModelsLoaded && imageModels.length > 0 ? (
-                  <select
-                    value={selectedImageModel}
-                    onChange={(event) => setSelectedImageModel(event.target.value)}
-                    className="rounded-2xl border border-purple-300/30 bg-purple-300/10 px-4 py-2 text-sm text-purple-100 outline-none transition focus:border-purple-300/40 focus:bg-purple-300/10"
-                  >
-                    {imageModels.map((model) => (
-                      <option key={model.id} value={model.id} className="bg-slate-900 text-white">
-                        {model.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : selectedAgent.id === "image-gen" && !imageModelsLoaded ? (
-                  <div className="inline-flex items-center gap-2 rounded-full border border-purple-300/20 bg-purple-300/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-purple-100">
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                    Model Gambar
-                  </div>
-                ) : modelsLoaded && models.length > 0 && selectedAgent.id !== "image-gen" ? (
-                  <select
-                    value={selectedModel}
-                    onChange={(event) => setSelectedModel(event.target.value)}
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition focus:border-cyan-300/40 focus:bg-white/[0.07]"
-                  >
-                    {models.map((model) => (
-                      <option key={model.id} value={model.id} className="bg-slate-900 text-white">
-                        {model.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : null}
-
-                {isLoading && (
-                  <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-100">
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                    Menjawab
-                  </div>
-                )}
-              </div>
+              )}
             </div>
 
             <div className="flex h-[540px] flex-col rounded-[28px] border border-white/10 bg-slate-950/55 p-4">
@@ -167,7 +88,6 @@ export default function Home() {
               isLoading={isLoading}
               onSend={sendMessage}
               onReset={clearChat}
-              selectedAgentId={selectedAgent.id}
             />
           </div>
         </section>
