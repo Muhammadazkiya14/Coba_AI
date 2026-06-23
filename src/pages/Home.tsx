@@ -16,13 +16,36 @@ const agentIcons: Record<string, React.ElementType> = {
 };
 
 export default function Home() {
-  const { messages, isLoading, selectedAgent, selectedModel, models, modelsLoaded, setSelectedAgent, setSelectedModel, loadModels, sendMessage, clearChat } = useChatStore();
+  const {
+    messages,
+    isLoading,
+    selectedAgent,
+    selectedModel,
+    selectedImageModel,
+    models,
+    modelsLoaded,
+    imageModels,
+    imageModelsLoaded,
+    setSelectedAgent,
+    setSelectedModel,
+    setSelectedImageModel,
+    loadModels,
+    loadImageModels,
+    sendMessage,
+    clearChat,
+  } = useChatStore();
 
   useEffect(() => {
     if (!modelsLoaded) {
       void loadModels();
     }
   }, [modelsLoaded, loadModels]);
+
+  useEffect(() => {
+    if (selectedAgent.id === "image-gen" && !imageModelsLoaded) {
+      void loadImageModels();
+    }
+  }, [selectedAgent.id, imageModelsLoaded, loadImageModels]);
 
   const AgentIcon = agentIcons[selectedAgent.icon] ?? Bot;
 
@@ -62,7 +85,24 @@ export default function Home() {
                   </select>
                 </div>
 
-                {modelsLoaded && models.length > 0 ? (
+                {selectedAgent.id === "image-gen" && imageModelsLoaded && imageModels.length > 0 ? (
+                  <select
+                    value={selectedImageModel}
+                    onChange={(event) => setSelectedImageModel(event.target.value)}
+                    className="rounded-2xl border border-purple-300/30 bg-purple-300/10 px-4 py-2 text-sm text-purple-100 outline-none transition focus:border-purple-300/40 focus:bg-purple-300/10"
+                  >
+                    {imageModels.map((model) => (
+                      <option key={model.id} value={model.id} className="bg-slate-900 text-white">
+                        {model.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : selectedAgent.id === "image-gen" && !imageModelsLoaded ? (
+                  <div className="inline-flex items-center gap-2 rounded-full border border-purple-300/20 bg-purple-300/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-purple-100">
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    Model Gambar
+                  </div>
+                ) : modelsLoaded && models.length > 0 && selectedAgent.id !== "image-gen" ? (
                   <select
                     value={selectedModel}
                     onChange={(event) => setSelectedModel(event.target.value)}

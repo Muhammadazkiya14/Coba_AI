@@ -2,12 +2,6 @@ import { Router, type Request, type Response } from "express";
 
 const router = Router();
 
-const FALLBACK_IMAGE_MODELS = [
-  "black-forest-labs/flux-schnell:free",
-  "stabilityai/stable-diffusion-xl:free",
-  "google/gemini-2.0-flash-exp:free",
-];
-
 router.post("/", async (req: Request, res: Response): Promise<void> => {
   const { prompt, model } = req.body as { prompt?: string; model?: string };
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -26,10 +20,7 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const defaultModel = process.env.OPENROUTER_IMAGE_MODEL || FALLBACK_IMAGE_MODELS[0];
-  const modelsToTry = [model, defaultModel, ...FALLBACK_IMAGE_MODELS].filter(
-    (m, idx, arr) => m && arr.indexOf(m) === idx
-  ) as string[];
+  const modelsToTry = model ? [model] : [];
 
   let lastError: { status?: number; message?: string } = {};
 
@@ -89,8 +80,8 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
     }
   }
 
-  res.status(lastError.status ?? 500).json({
-    error: lastError.message ?? "Semua model gambar gagal. Coba lagi nanti atau gunakan model lain.",
+  res.status(lastError.status ?? 400).json({
+    error: lastError.message ?? "Tidak ada model gambar yang tersedia. Pastikan OPENROUTER_API_KEY valid dan ada model image generation di akun kamu.",
   });
 });
 

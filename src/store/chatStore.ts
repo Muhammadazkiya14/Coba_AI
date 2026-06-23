@@ -15,6 +15,11 @@ interface FileAttachment {
   dataUrl?: string;
 }
 
+interface ImageModel {
+  id: string;
+  name: string;
+}
+
 interface ChatStore {
   messages: ChatMessage[];
   isLoading: boolean;
@@ -23,9 +28,14 @@ interface ChatStore {
   selectedModel: string;
   models: Array<{ id: string; name: string; contextLength: number }>;
   modelsLoaded: boolean;
+  imageModels: ImageModel[];
+  selectedImageModel: string;
+  imageModelsLoaded: boolean;
   setSelectedAgent: (agent: Agent) => void;
   setSelectedModel: (model: string) => void;
+  setSelectedImageModel: (model: string) => void;
   loadModels: () => Promise<void>;
+  loadImageModels: () => Promise<void>;
   sendMessage: (content: string, attachments?: FileAttachment[]) => Promise<void>;
   generateImage: (prompt: string) => Promise<void>;
   clearChat: () => void;
@@ -46,8 +56,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   selectedModel: "",
   models: [],
   modelsLoaded: false,
+  imageModels: [],
+  selectedImageModel: "",
+  imageModelsLoaded: false,
   setSelectedAgent: (agent) => set({ selectedAgent: agent }),
   setSelectedModel: (model) => set({ selectedModel: model }),
+  setSelectedImageModel: (model) => set({ selectedImageModel: model }),
   loadModels: async () => {
     try {
       const response = await fetch("/api/models");
@@ -74,9 +88,44 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       });
     }
   },
+  loadImageModels: async () => {
+    try {
+      const response = await fetch("/api/models/image");
+      const data = (await response.json()) as {
+        models?: ImageModel[];
+        error?: string;
+      };
+
+      if (!response.ok || !data.models) {
+        throw new Error(data.error ?? "Gagal memuat daftar model gambar.");
+      }
+
+      set({
+        imageModels: data.models,
+        imageModelsLoaded: true,
+        selectedImageModel: data.models[0]?.id ?? "",
+      });
+    } catch (error) {
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Terjadi gangguan saat memuat daftar model gambar.",
+      });
+    }
+  },
   generateImage: async (prompt: string) => {
     const trimmed = prompt.trim();
     if (!trimmed) return;
+
+    const imageModel = get().selectedImageModel;
+    if (!imageModel) {
+      set({
+        isLoading: false,
+        error: "Tidak ada model gambar yang dipilih. Tunggu model gambar dimuat atau refresh halaman.",
+      });
+      return;
+    }
 
     set({ isLoading: true, error: "" });
 
@@ -86,12 +135,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         headers: {
           "Content-Type": "application/json",
         },
-      body: JSON.stringify({
-        prompt: trimmed,
-      }),
+        body: JSON.stringify({
+          prompt: trimmed,
+          model: imageModel,
+        }),
       });
 
-      const data = (await response.json()) as { imageUrl?: string; error?: string };
+      const data = (await response.json()) as { imageUrl?: string; error?: string; modelUsed?: string };
 
       if (!response.ok || !data.imageUrl) {
         throw new Error(data.error ?? "Gagal generate gambar.");
@@ -100,7 +150,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       set((state) => ({
         messages: [
           ...state.messages,
-          createMessage("assistant", `Gambar berhasil dibuat:\n${trimmed}`, [data.imageUrl!]),
+          createMessage("assistant", `Gambar berhasil dibuat (${data.modelUsed ?? imageModel}):\n${trimmed}`, [data.imageUrl]),
         ],
         isLoading: false,
         error: "",
