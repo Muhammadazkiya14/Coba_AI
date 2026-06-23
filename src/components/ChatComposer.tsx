@@ -1,5 +1,9 @@
 import { FormEvent, useState, useRef } from "react";
 import { AlertTriangle, FileImage, LoaderCircle, Paperclip, RotateCcw, SendHorizonal, X } from "lucide-react";
+import mammoth from "mammoth";
+import * as pdfjsLib from "pdfjs-dist";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface FileAttachment {
   name: string;
@@ -36,6 +40,25 @@ export default function ChatComposer({
     setTimeout(() => setWarning(""), 5000);
   }
 
+  async function extractPdfText(file: File): Promise<string> {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pages: string[] = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const text = (content.items as Array<{ str: string }>).map((item) => item.str).join(" ");
+      pages.push(text);
+    }
+    return pages.join("\n\n");
+  }
+
+  async function extractDocxText(file: File): Promise<string> {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
+  }
+
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const files = event.target.files;
     if (!files) return;
@@ -49,6 +72,43 @@ export default function ChatComposer({
     Array.from(files).forEach((file) => {
       if (file.size > MAX_FILE_SIZE) {
         showWarning(`File "${file.name}" terlalu besar (${(file.size / 1024 / 1024).toFixed(1)}MB). Maksimal 5MB per file.`);
+        return;
+      }
+
+      if (file.type === "application/pdf") {
+        extractPdfText(file).then((text) => {
+          setAttachments((prev) => [
+            ...prev,
+            {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              content: text,
+            },
+          ]);
+        }).catch(() => {
+          showWarning(`Gagal membaca file "${file.name}".`);
+        });
+        return;
+      }
+
+      if (
+        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.name.endsWith(".docx")
+      ) {
+        extractDocxText(file).then((text) => {
+          setAttachments((prev) => [
+            ...prev,
+            {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              content: text,
+            },
+          ]);
+        }).catch(() => {
+          showWarning(`Gagal membaca file "${file.name}".`);
+        });
         return;
       }
 
@@ -185,7 +245,7 @@ export default function ChatComposer({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".txt,.md,.json,.csv,.js,.ts,.py,.java,.c,.cpp,.h,.html,.css,.xml,.yaml,.yml"
+            accept=".txt,.md,.json,.csv,.js,.ts,.py,.java,.c,.cpp,.h,.html,.css,.xml,.yaml,.yml,.pdf,.docx,.doc"
             className="hidden"
             onChange={handleFileChange}
             multiple
