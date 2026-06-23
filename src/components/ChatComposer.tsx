@@ -185,7 +185,7 @@ export default function ChatComposer({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".txt,.md,.json,.csv,.js,.ts,.py,.java,.c,.cpp,.h,.html,.css,.xml,.yaml,.yml,.docx,.pdf"
+            accept=".txt,.md,.json,.csv,.js,.ts,.py,.java,.c,.cpp,.h,.html,.css,.xml,.yaml,.yml"
             className="hidden"
             onChange={handleFileChange}
             multiple
