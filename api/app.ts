@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import chatRoutes from "./routes/chat.js";
 import modelsRoutes from "./routes/models.js";
+import imageRoutes from "./routes/image.js";
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.get("/api/health", (_req: Request, res: Response): void => {
 
 app.use("/api/chat", chatRoutes);
 app.use("/api/models", modelsRoutes);
+app.use("/api/generate-image", imageRoutes);
 
 app.use("/api", (_req: Request, res: Response): void => {
   res.status(404).json({

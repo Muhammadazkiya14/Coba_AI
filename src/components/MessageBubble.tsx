@@ -37,7 +37,8 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
                 key={idx}
                 src={img}
                 alt={`Lampiran ${idx + 1}`}
-                className="max-h-48 max-w-full rounded-xl border border-white/10 object-cover"
+                className="max-h-64 max-w-full cursor-pointer rounded-xl border border-white/10 object-cover transition hover:opacity-90"
+                onClick={() => window.open(img, "_blank")}
               />
             ))}
           </div>

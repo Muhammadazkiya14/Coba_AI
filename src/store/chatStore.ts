@@ -27,6 +27,7 @@ interface ChatStore {
   setSelectedModel: (model: string) => void;
   loadModels: () => Promise<void>;
   sendMessage: (content: string, attachments?: FileAttachment[]) => Promise<void>;
+  generateImage: (prompt: string) => Promise<void>;
   clearChat: () => void;
 }
 
@@ -73,6 +74,48 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       });
     }
   },
+  generateImage: async (prompt: string) => {
+    const trimmed = prompt.trim();
+    if (!trimmed) return;
+
+    set({ isLoading: true, error: "" });
+
+    try {
+      const response = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: trimmed,
+          model: get().selectedModel,
+        }),
+      });
+
+      const data = (await response.json()) as { imageUrl?: string; error?: string };
+
+      if (!response.ok || !data.imageUrl) {
+        throw new Error(data.error ?? "Gagal generate gambar.");
+      }
+
+      set((state) => ({
+        messages: [
+          ...state.messages,
+          createMessage("assistant", `Gambar berhasil dibuat:\n${trimmed}`, [data.imageUrl!]),
+        ],
+        isLoading: false,
+        error: "",
+      }));
+    } catch (error) {
+      set({
+        isLoading: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Terjadi gangguan saat generate gambar.",
+      });
+    }
+  },
   sendMessage: async (content: string, attachments?: FileAttachment[]) => {
     const trimmed = content.trim();
     const hasAttachments = attachments && attachments.length > 0;
@@ -98,6 +141,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const detectedAgent = detectAgent(fullContent, hasImages, hasFiles, get().selectedAgent.id);
 
     set({ selectedAgent: detectedAgent });
+
+    if (detectedAgent.id === "image-gen" && !hasAttachments) {
+      await get().generateImage(fullContent);
+      return;
+    }
 
     const userMessage = createMessage("user", fullContent, images);
     const nextMessages = [...get().messages, userMessage];

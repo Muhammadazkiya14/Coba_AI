@@ -53,8 +53,16 @@ export const agents: Agent[] = [
     id: "image",
     name: "Image Analyst",
     icon: "Image",
-    description: "Analisis dan deskripsi gambar",
+    description: "Analisis dan deskripsi gambar yang diupload",
     systemPrompt: "Kamu adalah vision AI yang bisa menganalisis gambar. Jelaskan apa yang ada di gambar, identifikasi objek, teks, dan konteks. Jawab dalam bahasa Indonesia yang detail dan akurat.",
+    supportsImage: true,
+  },
+  {
+    id: "image-gen",
+    name: "Image Generator",
+    icon: "ImageIcon",
+    description: "Buat gambar 3D, ilustrasi, dan desain lain berdasarkan teks",
+    systemPrompt: "Kamu adalah AI yang bisa membuat gambar. Buat gambar sesuai deskripsi user.",
     supportsImage: true,
   },
 ];
@@ -117,10 +125,16 @@ export function detectAgent(
   hasImages: boolean,
   hasFiles: boolean,
   manualAgentId?: string,
+  isImageGenMode: boolean = false,
 ): Agent {
   if (manualAgentId) {
     const manualAgent = agents.find((a) => a.id === manualAgentId);
     if (manualAgent) return manualAgent;
+  }
+
+  if (isImageGenMode) {
+    const imageGenAgent = agents.find((a) => a.id === "image-gen");
+    if (imageGenAgent) return imageGenAgent;
   }
 
   if (hasImages && !hasFiles) {
@@ -136,6 +150,36 @@ export function detectAgent(
   if (hasImages && hasFiles) {
     const docAgent = agents.find((a) => a.id === "document");
     if (docAgent) return docAgent;
+  }
+
+  const lowerContent = content.toLowerCase();
+
+  const imageGenKeywords = [
+    "buat gambar", "generate gambar", "gambar", "illustration", "ilustrasi",
+    "3d", "3D", "desain", "design", "gambarkan", "visualisasikan",
+    "create image", "generate image", "draw", "paint", "art",
+  ];
+
+  const isImageGen = imageGenKeywords.some((keyword) => lowerContent.includes(keyword));
+
+  if (isImageGen) {
+    const imageGenAgent = agents.find((a) => a.id === "image-gen");
+    if (imageGenAgent) return imageGenAgent;
+  }
+
+  const codingKeywords = [
+    "kode", "code", "coding", "program", "javascript", "python", "java",
+    "typescript", "react", "vue", "angular", "node.js", "api", "database",
+    "sql", "mongo", "git", "github", "function", "class", "method",
+    "algorithm", "debug", "error", "bug", "software", "aplikasi",
+    "bikin kode", "buat kode", "tulis kode", "programming", "developer",
+  ];
+
+  const isCoding = codingKeywords.some((keyword) => lowerContent.includes(keyword));
+
+  if (isCoding) {
+    const codingAgent = agents.find((a) => a.id === "coding");
+    if (codingAgent) return codingAgent;
   }
 
   const chatAgent = agents.find((a) => a.id === "chat");

@@ -5,13 +5,14 @@ import ChatHeader from "@/components/ChatHeader";
 import MessageBubble from "@/components/MessageBubble";
 import { useChatStore } from "@/store/chatStore";
 import { agents, starterPrompts } from "@/utils/chat";
-import { Bot, Code, FileText, ImageIcon, MessageSquare } from "lucide-react";
+import { Bot, Code, FileText, Image, MessageSquare, Sparkles } from "lucide-react";
 
 const agentIcons: Record<string, React.ElementType> = {
   MessageSquare,
   Code,
   FileText,
-  ImageIcon,
+  Image,
+  ImageIcon: Sparkles,
 };
 
 export default function Home() {
@@ -126,6 +127,7 @@ export default function Home() {
               isLoading={isLoading}
               onSend={sendMessage}
               onReset={clearChat}
+              selectedAgentId={selectedAgent.id}
             />
           </div>
         </section>
