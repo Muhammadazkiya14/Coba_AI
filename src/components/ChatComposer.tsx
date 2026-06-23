@@ -1,5 +1,5 @@
 import { FormEvent, useState, useRef } from "react";
-import { FileImage, LoaderCircle, Paperclip, RotateCcw, SendHorizonal, X } from "lucide-react";
+import { AlertTriangle, FileImage, LoaderCircle, Paperclip, RotateCcw, SendHorizonal, X } from "lucide-react";
 
 interface FileAttachment {
   name: string;
@@ -15,6 +15,9 @@ interface ChatComposerProps {
   onReset: () => void;
 }
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILES = 10;
+
 export default function ChatComposer({
   isLoading,
   onSend,
@@ -22,14 +25,31 @@ export default function ChatComposer({
 }: ChatComposerProps) {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const [warning, setWarning] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  function showWarning(msg: string) {
+    setWarning(msg);
+    setTimeout(() => setWarning(""), 5000);
+  }
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const files = event.target.files;
     if (!files) return;
 
+    if (attachments.length + files.length > MAX_FILES) {
+      showWarning(`Maksimal ${MAX_FILES} file per pesan. Saat ini ada ${attachments.length} file.`);
+      event.target.value = "";
+      return;
+    }
+
     Array.from(files).forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        showWarning(`File "${file.name}" terlalu besar (${(file.size / 1024 / 1024).toFixed(1)}MB). Maksimal 5MB per file.`);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result;
@@ -79,6 +99,7 @@ export default function ChatComposer({
 
     setMessage("");
     setAttachments([]);
+    setWarning("");
     await onSend(trimmed, hasAttachments ? attachments : undefined);
   }
 
@@ -101,6 +122,13 @@ export default function ChatComposer({
       <label className="mb-3 block text-xs uppercase tracking-[0.3em] text-slate-400">
         Tulis pesan
       </label>
+
+      {warning && (
+        <div className="mb-3 flex items-center gap-2 rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-3 text-xs text-amber-100">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-300" />
+          <span>{warning}</span>
+        </div>
+      )}
 
       {attachments.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
@@ -183,7 +211,7 @@ export default function ChatComposer({
           </button>
 
           <p className="text-xs text-slate-500">
-            Enter kirim, Shift+Enter baris baru
+            Maks {MAX_FILES} file, {MAX_FILE_SIZE / 1024 / 1024}MB per file
           </p>
         </div>
 
