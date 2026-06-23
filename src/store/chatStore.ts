@@ -86,10 +86,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          prompt: trimmed,
-          model: get().selectedModel,
-        }),
+      body: JSON.stringify({
+        prompt: trimmed,
+      }),
       });
 
       const data = (await response.json()) as { imageUrl?: string; error?: string };
